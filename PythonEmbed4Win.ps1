@@ -56,10 +56,10 @@
              C:\python-embed-3.8.4
              C:\python-msi-install-3.8.6
              C:\python-msi-install-3.8.6\lib\site-packages
-          The python._pth and sitecustomize.py seem to have no affect.
-          As of November 2023, the latest version of supported Pythons,
-          3.6 to 3.12, appear to behave correctly. It only affects a few
-          intermediate releases.
+         The python._pth and sitecustomize.py seem to have no affect.
+         As of November 2023, the latest version of supported Pythons,
+         3.6 to 3.12, appear to behave correctly. It only affects a few
+         intermediate releases.
 
 .PARAMETER Version
     Version of Python to install. Leave blank to fetch the latest Python.
@@ -81,7 +81,7 @@
     Author: James Thomas Moon
 #>
 [Cmdletbinding(DefaultParameterSetName = 'Install')]
-Param (
+param (
     [Parameter(ParameterSetName = 'Install')]
     [System.IO.FileInfo] $Path,
     [Parameter(ParameterSetName = 'Install')]
@@ -91,7 +91,7 @@ Param (
     #       will cause an error.
     [Parameter(ParameterSetName = 'Install')]
     [Parameter(ParameterSetName = 'UriCheck')]
-    [ValidateSet('win32','amd64','arm64')]
+    [ValidateSet('win32', 'amd64', 'arm64')]
     [String] $Arch,
     [Parameter(ParameterSetName = 'Install')]
     [switch] $SkipExec,
@@ -121,7 +121,7 @@ New-Variable -Name URI_PYTHON_VERSIONS -Option ReadOnly -Force -Value ([URI] "ht
 function URI-Combine
 {
     [OutputType([URI])]
-    Param(
+    param (
         [Parameter(Mandatory=$true)][URI]$uri,
         [Parameter(Mandatory=$true)][String]$append
     )
@@ -569,7 +569,9 @@ $URIs_503 = @(
 
 function New-TemporaryDirectory {
     [OutputType([System.IO.FileInfo])]
-    Param([String]$extra)
+    param (
+        [String]$extra
+    )
     Join-Path -Path $([System.IO.Path]::GetTempPath()) -ChildPath $extra.ToString() `
         | ForEach-Object { New-Item -Path $_ -ItemType Directory -Force }
 }
@@ -579,7 +581,9 @@ function Print-File-Nicely {
     .SYNOPSIS
     Print a file for easy grok.
     #>
-    Param([System.IO.FileInfo]$path)
+    param (
+        [System.IO.FileInfo]$path
+    )
 
     Write-Host -ForegroundColor Yellow `
         "File:" $path "`n"
@@ -594,7 +598,7 @@ function Invoke-WebRequest-Head {
     Wrapper to call `Invoke-WebRequest` using HTTP Method HEAD,
     adjusted to the running version of PowerShell.
     #>
-    Param(
+    param (
         [Parameter(Mandatory=$true)][URI]$uri
     )
 
@@ -624,7 +628,7 @@ function Download
     .SYNOPSIS
     download file at $uri to $dest, note the time taken
     #>
-    Param(
+    param (
         [Parameter(Mandatory=$true)][URI]$uri,
         [Parameter(Mandatory=$true)][System.IO.FileInfo]$dest
     )
@@ -651,7 +655,7 @@ function Confirm-URI
     return $True if HTTP StatusCode == 200 else $False
     #>
     [OutputType([Bool])]
-    Param(
+    param (
         [Parameter(Mandatory=$true)][URI]$uri,
         [Parameter(Mandatory=$false)][Bool]$printResult=$false
     )
@@ -663,12 +667,12 @@ function Confirm-URI
         if ($printResult) {
             Write-Host ("URI " + $uri.ToString() + " returned " + $wr1.StatusCode.ToString()) -ForegroundColor Green
         }
-        return $True
+        return $true
     }
     if ($printResult) {
         Write-Host ("URI " + $uri.ToString() + " returned " + $wr1.StatusCode.ToString()) -ForegroundColor Red
     }
-    return $False
+    return $false
 }
 
 function Confirm-URI-Python-Version
@@ -680,7 +684,7 @@ function Confirm-URI-Python-Version
     if -onlyLive then skip known hardcoded URIs (check them online)
     #>
     [OutputType([Bool])]
-    Param(
+    param (
         [Parameter(Mandatory=$true)][URI]$uri,
         [Parameter(Mandatory=$false)][Bool]$onlyLive=$false
     )
@@ -688,10 +692,10 @@ function Confirm-URI-Python-Version
     # first check hardcoded known URIs
     if (($URIs_200.Contains($uri.ToString())) -and (-not $onlyLive)) {
         Write-Verbose "URI known to exist ${uri}"
-        return $True
+        return $true
     } elseif (($URIs_503.Contains($uri.ToString())) -and (-not $onlyLive)) {
         Write-Verbose "URI known to not exist ${uri}"
-        return $False
+        return $false
     }
     # check live URI
     Write-Verbose "URI must be checked ${uri}"
@@ -706,8 +710,7 @@ function Create-Python-Zip-Name
     e.g. "python-3.8.2-embed-amd64.zip"
     #>
     [OutputType([String])]
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][System.Version]$version,
         [Parameter(Mandatory=$true)][Archs]$arch
     )
@@ -723,8 +726,7 @@ function Create-Python-Zip-URI
         https://www.python.org/ftp/python/3.8.2/python-3.8.2-embed-amd64.zip
     #>
     [OutputType([URI])]
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][URI]$base_uri,
         [Parameter(Mandatory=$true)][System.Version]$version,
         [Parameter(Mandatory=$true)][Archs]$arch
@@ -748,8 +750,7 @@ function Scrape-Python-Versions
     return Hashtable{[System.Version]$version, [URI]$URI_zip}
     #>
     [OutputType([System.Collections.Hashtable])]
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][URI]$uri,
         [Parameter(Mandatory=$true)][System.IO.DirectoryInfo]$path_tmp,
         [Parameter(Mandatory=$true)][Archs]$arch_install,
@@ -759,8 +760,7 @@ function Scrape-Python-Versions
     Write-Verbose ("Scraping all available versions of Python at " + $uri.ToString())
 
     $python_versions_html = [System.IO.FileInfo] (Join-Path -Path $path_tmp -ChildPath "python_versions.html")
-    if(-not (Test-Path $python_versions_html))
-    {
+    if (-not (Test-Path $python_versions_html)) {
         Download $uri $python_versions_html
     }
     # example snippet of the HTML with listed versions (https://www.python.org/ftp/python/)
@@ -780,11 +780,11 @@ function Scrape-Python-Versions
 
     # scrape the versions
     $versions_scraped = New-Object Collections.Generic.List[System.Version]
-    foreach(
+    foreach (
         $m1 in Select-String -CaseSensitive -Pattern '\<a href="[345]\.\d+\.\d+/"\>' -Path $python_versions_html
     ) {
         $m2 = $m1.Matches.value | Select-String -Pattern '"(.*)"'
-        if ( $m2.Matches.Groups.Length -lt 2 ) {
+        if ($m2.Matches.Groups.Length -lt 2) {
             continue
         }
         $subdir = $m2.Matches.Groups[1].value
@@ -848,14 +848,12 @@ function Check-Premade-Uris
     Check built-in URIs for expected HTTP Status Codes
     Only meant to aid self-testing this script.
     #>
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][Archs]$arch_install
     )
     Write-Host "Check expected good URIs for" $arch_install.ToString()
     foreach ($uri in $URIs_200) {
-        if (-not ($uri.ToString().Contains($arch_install.ToString())))
-        {
+        if (-not ($uri.ToString().Contains($arch_install.ToString()))) {
             continue
         }
         if ($wr1 = Invoke-WebRequest-Head -Uri $uri) {
@@ -869,8 +867,7 @@ function Check-Premade-Uris
 
     Write-Host "Check expected bad URIs for" $arch_install.ToString() "(scraped URIs that lead to invalid data)"
     foreach ($uri in $URIs_503) {
-        if (-not ($uri.ToString().Contains($arch_install.ToString())))
-        {
+        if (-not ($uri.ToString().Contains($arch_install.ToString()))) {
             continue
         }
         if ($wr1 = Invoke-WebRequest-Head -Uri $uri) {
@@ -893,8 +890,7 @@ function Process-Python-Zip
     BUG: interleaved Write-host and python.exe stdout occurs here
     #>
 
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][System.IO.FileInfo]$path_zip,
         [Parameter(Mandatory=$true)][System.IO.FileInfo]$path_install,
         [Parameter(Mandatory=$true)][System.Version]$ver,
@@ -920,18 +916,17 @@ function Process-Python-Zip
     # to under `Lib/`.
     $pythonzip = Get-ChildItem -File -Filter "python*.zip" -Depth 1
     Write-Host -ForegroundColor Yellow "Unzip" $pythonzip
-    Expand-Archive $pythonzip -DestinationPath "Lib/python_zip"
+    Expand-Archive $pythonzip -DestinationPath "Lib"
     Remove-Item -Path $pythonzip
 
     # 2. set python._pth file
     $pythonpth = Get-ChildItem -File -Filter "python*._pth" -Depth 1
-    if($null -eq $pythonpth) {
+    if ($null -eq $pythonpth) {
         $pythonpth = ".\python._pth"
     }
     $content_pythonpth = "# python._pth
 #
 # this file was added by PythonEmbed4Win.ps1
-.\Lib\python_zip
 .\DLLs
 .\Lib
 .\Scripts
@@ -1074,8 +1069,7 @@ function Install-Python
     Install python from zipped install `$uri_zip` to `$path_install`.
     Use temporary path `$path_tmp` for intermediate steps.
     #>
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][System.IO.DirectoryInfo]$path_tmp,
         [Parameter(Mandatory=$true)][System.IO.FileInfo]$path_install,
         [Parameter(Mandatory=$true)][URI]$uri_zip,
@@ -1106,8 +1100,7 @@ function Process-Version {
     Resolve major or major.minor to latest major.minor.micro
     #>
     [OutputType([System.Version])]
-    Param
-    (
+    param (
         [Parameter(Mandatory=$true)][System.Version]$version,
         [Parameter(Mandatory=$true)][Collections.Generic.List[System.Version]]$versions
     )
@@ -1199,8 +1192,7 @@ try {
             Write-Verbose "Version is ${ver}"
         }
         $uri_zip = Create-Python-Zip-URI $URI_PYTHON_VERSIONS $ver $archs_
-        if(-not (Confirm-URI $uri_zip))
-        {
+        if (-not (Confirm-URI $uri_zip)) {
             Write-Error "Python version ${Version} for arch ${archs_} was not found at ${URI_PYTHON_VERSIONS}"
         }
     }
